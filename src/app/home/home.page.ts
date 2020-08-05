@@ -20,6 +20,16 @@ let score = 0;
 let firingTimer = 0;
 let livingEnemies = [];
 let lives;
+let mobileFireButton = false;
+
+let mobileCursors = {
+  left: false,
+  right: false
+};
+
+
+let stateText;
+
 
 
 @Component({
@@ -52,7 +62,7 @@ export class HomePage {
 
 
     scoreString = 'Score : ';
-    scoreText = game.add.text(10,10, scoreString + score, {font: '24px Arial', fill: '#fff'});
+    scoreText = game.add.text(10, 10, scoreString + score, { font: '24px Arial', fill: '#fff' });
 
 
     //Configurando nossos tiros
@@ -74,12 +84,11 @@ export class HomePage {
 
     //Vidas do jogador
     lives = game.add.group();
-    game.add.text(game.world.width - 100, 10, 'Vidas : ', {font: '24px Arial', fill: '#fff'});
+    game.add.text(game.world.width - 100, 10, 'Vidas : ', { font: '24px Arial', fill: '#fff' });
 
-    for(let i = 0; i < 3; i++)
-    {
+    for (let i = 0; i < 3; i++) {
       let ship = lives.create(game.world.width - 100 + (30 * i), 60, 'ship');
-      ship.anchor.setTo(0.5,0.5);
+      ship.anchor.setTo(0.5, 0.5);
       ship.angle = 90;
     }
 
@@ -89,6 +98,11 @@ export class HomePage {
     player.anchor.setTo(0.5, 0.5);
     game.physics.enable(player, Phaser.Physics.ARCADE);
 
+
+    //Tela de game over
+    stateText = game.add.text(game.world.centerX, game.world.centerY, '', {font: '34px Arial', fill: '#fff'});
+    stateText.anchor.setTo(0.5,0.5);
+    stateText.visible = false;
 
 
     //nossos oponentes
@@ -111,27 +125,31 @@ export class HomePage {
     startfield.tilePosition.y += 2;
 
     player.body.velocity.setTo(0, 0);
-    if (cursors.left.isDown) {
+    if (cursors.left.isDown || mobileCursors.left == true) {
       player.body.velocity.x = -200;
     }
-    else if (cursors.right.isDown) {
+    else if (cursors.right.isDown || mobileCursors.right == true) {
       player.body.velocity.x = 200;
     }
 
-    if (cursors.up.isDown) {
-      player.body.velocity.y = -200;
-    }
-    else if (cursors.down.isDown) {
-      player.body.velocity.y = 200;
-    }
 
-    if (fireButton.isDown) {
+    // if (cursors.up.isDown) {
+    //   player.body.velocity.y = -200;
+    // }
+    // else if (cursors.down.isDown) {
+    //   player.body.velocity.y = 200;
+    // }
+
+
+
+
+
+    if (fireButton.isDown || mobileFireButton == true) {
       that.fireBullet();
     }
 
-    if( game.time.now > firingTimer)
-    {
-        that.enemyFires();
+    if (game.time.now > firingTimer) {
+      that.enemyFires();
     }
 
 
@@ -202,37 +220,34 @@ export class HomePage {
     aliens.y += 10;
   }
 
-  enemyFires()
-  {
+  enemyFires() {
     let enemyBullet = enemyBullets.getFirstExists(false);
 
     livingEnemies.length = 0;
 
-    aliens.forEachAlive(function(alien) {
+    aliens.forEachAlive(function (alien) {
       livingEnemies.push(alien);
     });
 
-    if(enemyBullet && livingEnemies.length > 0)
-    {
+    if (enemyBullet && livingEnemies.length > 0) {
       let random = game.rnd.integerInRange(0, livingEnemies.length - 1);
-      
+
       let shooter = livingEnemies[random];
 
       enemyBullet.reset(shooter.body.x, shooter.body.y);
-      
+
       game.physics.arcade.moveToObject(enemyBullet, player, 120);
       firingTimer = game.time.now + 2000;
 
     }
   }
 
-  enemyHitsPlayer(player, bullet)
-  {
+  enemyHitsPlayer(player, bullet) {
     bullet.kill();
 
 
     let live = lives.getFirstAlive();
-    if(live) {
+    if (live) {
       live.kill();
     }
 
@@ -241,11 +256,60 @@ export class HomePage {
     explosion.play('kaboom', 30, false, true);
 
 
-    if(lives.countLiving() < 1)
-    {
+    if (lives.countLiving() < 1) {
       player.kill();
+
+      enemyBullets.callAll('kill');
+      stateText.text = "GAME OVER \n Toque para reiniciar";
+      stateText.visible = true;
+
+      aliens.callAll('kill');
+      game.input.onTap.addOnce(that.restart, this);
     }
 
+
+  }
+
+
+  fireStart() {
+    mobileFireButton = true;
+  }
+
+  fireEnd() {
+    mobileFireButton = false;
+  }
+
+  leftStart() {
+    mobileCursors.left = true;
+  }
+
+  leftEnd() {
+    mobileCursors.left = false;
+  }
+
+  rightStart() {
+    mobileCursors.right = true;
+  }
+
+  rightEnd() {
+    mobileCursors.right = false;
+  }
+
+  restart()
+  {
+    lives.callAll('revive');
+
+    aliens.removeAll();
+    that.createAliens();
+
+    player.revive();
+    stateText.visible = false;
+  }
+
+
+  soma(){
+
+    this.soma();
 
   }
 

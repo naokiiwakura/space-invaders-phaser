@@ -1,8 +1,24 @@
 
-<ion-content [fullscreen]="true">
 
+
+
+
+
+
+
+
+
+
+
+
+<ion-content [fullscreen]="true">
 
   <div id="space-invaders"></div>
 
+  <div class="buttons">
+    <ion-button color="danger" (touchstart)="fireStart()" (touchend)="fireEnd()">Disparar</ion-button>
+    <ion-button (touchstart)="leftStart($event)" (touchend)="leftEnd($event)">Esquerda</ion-button>
+    <ion-button (touchstart)="rightStart($event)" (touchend)="rightEnd($event)">Direita</ion-button>
+  </div>
 
 </ion-content>
